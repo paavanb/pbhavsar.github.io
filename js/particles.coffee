@@ -119,13 +119,12 @@ class Animator
     @tick = .001
 
   generate_particles: (num) ->
-    colors = ['green', 'blue', 'green', 'purple', 'maroon', 'orange']
+    colors = ['#FF5454', '#FF904A', '#FFCD57', '#FFFC85', '#FFF']
     funcs = _.times(num, () =>
       -> return new Particle(_.random(0, @canvas.width),
                              _.random(0, @canvas.height),
                              1,
-                             '#ffae23')
-                             #colors[_.random(0, 6)])
+                             colors[_.random(0, colors.length)])
     )
     return _.map(funcs, (f) -> f())
 
@@ -138,7 +137,7 @@ class Animator
     start = Date.now()
     ctx = @canvas.getContext("2d")
     ctx.globalCompositeOperation = 'source-over'
-    ctx.fillStyle = "rgba(0, 0, 0, #{255 * 2 * @tick})"
+    ctx.fillStyle = "rgba(0, 0, 0, #{255 * 1.5 * @tick})"
     ctx.fillRect(0, 0, @canvas.width, @canvas.height)
     #ctx.clearRect(0, 0, @canvas.width, @canvas.height)
 
