@@ -95,7 +95,7 @@ class Particle
       @pos.y = Math.min(Math.max(@pos.y, 0), canvas.height)
       @vel.y = -@vel.y * 0.5
 
-    @mass = Math.min(Math.max(@vel.mag()/10000, 0.001), 1)
+    @mass = Math.min(Math.max(@vel.mag()/10000, 0.1), 1)
 
   draw: (ctx) =>
     ctx.save()
