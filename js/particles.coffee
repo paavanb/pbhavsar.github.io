@@ -1,62 +1,107 @@
 ---
 ---
-MOUSE = 
-  x: 0
-  y: 0
-  mass: 1000
+
+class Vector
+  constructor: (@x, @y) ->
+
+  mag: ->
+    return Math.sqrt(@mag_sq())
+
+  mag_sq: ->
+    return @x * @x + @y * @y
+
+  minus: (vec) ->
+    @x -= vec.x
+    @y -= vec.y
+    return @
+
+  plus: (vec) ->
+    @x += vec.x
+    @y += vec.y
+    return @
+
+  s_mult: (factor) ->
+    @x *= factor
+    @y *= factor
+    return @
+
+  s_div: (factor) ->
+    @x /= factor
+    @y /= factor
+    return @
+
+  @add: (vec1, vec2) ->
+    return new Vector(vec1.x, vec1.y).plus(vec2)
+
+  @subtract: (vec1, vec2) ->
+    return new Vector(vec1.x, vec1.y).minus(vec2)
+
+  @unit: (vec) ->
+    mag = vec.mag()
+    if mag != 0
+      return new Vector(vec.x / mag, vec.y / mag)
+    else
+      return new Vector(0, 0)
+
+  @s_mult: (vec, k) ->
+    return new Vector(vec.x, vec.y).s_mult(k)
+
+  @s_div: (vec, k) ->
+    return new Vector(vec.x, vec.y).s_div(k)
 
 
 class Particle
-  constructor: (@x, @y, @mass) ->
-    @vx = 0.0
-    @vy = 0.0
-    @G = 10000
+  constructor: (x, y, @mass, @color) ->
+    @pos = new Vector(x, y)
+    @vel = new Vector(0, 0)
 
-  force: (x_dist, y_dist) =>
-    dist_sq = Math.max(x_dist * x_dist + y_dist * y_dist, 25)
-    g_force = @G * MOUSE.mass * @mass * 1 / dist_sq
-    # TODO Implement spring force
-    return g_force
+    @G = 10000000
+
+  force: (pos, vel) =>
+    difference = Vector.subtract(MOUSE.pos, pos)
+    dist_sq = Math.max(difference.mag_sq(), 25)
+
+    g_force = @G * MOUSE.mass * @mass / dist_sq
+    k = 10000
+    spring_force = k * Math.sqrt(dist_sq) - 1 * @vel.mag()
+
+    return Vector.unit(difference).s_mult(Math.min(g_force, spring_force))
 
   update: (canvas, ctx, tick) =>
-    x_dist = MOUSE.x - @x
-    y_dist = MOUSE.y - @y
+    f = @force(@pos, @vel)
+    accel = Vector.s_div(f, @mass)
 
-    f = @force(x_dist, y_dist)
-    angle = Math.atan2(y_dist, x_dist)
-    ax = f * Math.cos(angle) / @mass
-    ay = f * Math.sin(angle) / @mass
-
-    @x += tick * (@vx + tick * ax / 2)
-    if @x < 0 or @x > canvas.width
-      @x = Math.min(Math.max(@x, 0), canvas.width)
-      @vx = -@vx * 0.9
-    @y += tick * (@vy + tick * ay / 2)
-    if @y < 0 or @y > canvas.height
-      @y = Math.min(Math.max(@y, 0), canvas.height)
-      @vy = -@vy * 0.9
+    # Update position
+    delta_pos = Vector.add(@vel, Vector.s_mult(accel, tick).s_div(2))
+    @pos.plus(delta_pos.s_mult(tick))
 
     #console.log("X: #{@x}, VX: #{@vx}, AX: #{ax}")
 
-    x_dist = MOUSE.x - @x
-    y_dist = MOUSE.y - @y
+    f = @force(@pos, @vel)
+    accel2 = Vector.s_div(f, @mass)
 
-    f = @force(x_dist, y_dist)
-    angle = Math.atan2(y_dist, x_dist)
-    ax2 = f * Math.cos(angle) / @mass
-    ay2 = f * Math.sin(angle) / @mass
+    # Update velocity
+    delta_vel = Vector.add(accel2, accel).s_div(2)
+    @vel.plus(delta_vel.s_mult(tick))
+   
+    # Bounds check
+    if @pos.x < 0 or @pos.x > canvas.width
+      @pos.x = Math.min(Math.max(@pos.x, 0), canvas.width)
+      @vel.x = -@vel.x * 0.5
+    if @pos.y < 0 or @pos.y > canvas.height
+      @pos.y = Math.min(Math.max(@pos.y, 0), canvas.height)
+      @vel.y = -@vel.y * 0.5
 
-    @vx += tick * (ax + ax2) / 2
-    @vy += tick * (ay + ay2) / 2
+    @mass = Math.min(Math.max(@vel.mag()/10000, 0.001), 1)
 
   draw: (ctx) =>
     ctx.save()
     ctx.beginPath()
 
-    ctx.translate(@x, @y)
+    ctx.translate(@pos.x, @pos.y)
 
-    ctx.fillStyle = 'green'
-    ctx.ellipse(0, 0, 5, 5, 0, 0, 2*Math.PI, false)
+    ctx.ellipse(0, 0, 5 * @mass, 5 * @mass, 0, 0, 2*Math.PI, false)
+    ctx.fillStyle = @color
     ctx.fill()
 
     ctx.closePath()
@@ -71,21 +116,26 @@ class Animator
     @tick = 1
 
   generate_particles: (num) ->
+    colors = ['green', 'blue', 'green', 'purple', 'maroon', 'orange']
     funcs = _.times(num, () =>
       -> return new Particle(_.random(0, @canvas.width),
                              _.random(0, @canvas.height),
-                             Math.random()*0.01 + 1)
+                             0.1,
+                             colors[_.random(0, 6)])
     )
     return _.map(funcs, (f) -> f())
 
   update_mouse_pos: (evt) =>
     rect = @canvas.getBoundingClientRect()
-    MOUSE.x = evt.clientX - rect.left
-    MOUSE.y = evt.clientY - rect.top
+    MOUSE.pos.x = evt.clientX - rect.left
+    MOUSE.pos.y = evt.clientY - rect.top
 
   draw: =>
     start = Date.now()
     ctx = @canvas.getContext("2d")
+    ctx.globalCompositeOperation = 'source-over'
+    ctx.fillStyle = "rgba(0, 0, 0, #{255 * 1 * @tick})"
+    #ctx.fillRect(0, 0, @canvas.width, @canvas.height)
     ctx.clearRect(0, 0, @canvas.width, @canvas.height)
 
     for particle in @particles
@@ -93,10 +143,16 @@ class Animator
       particle.draw(ctx)
 
     end = Date.now()
-    @tick = (Math.max(end - start, 10)) / 1000.0
+    @tick = (Math.max(end - start, 1)) / 1000.0
 
     window.requestAnimationFrame(@draw)
 
+MOUSE =
+  pos: undefined
+  mass: 1000
 $ ->
+  MOUSE = 
+    pos: new Vector(0, 0)
+    mass: 1000
   animator = new Animator($("canvas"))
   window.requestAnimationFrame(animator.draw)
