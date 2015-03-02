@@ -55,17 +55,19 @@ class Particle
     @pos = new Vector(x, y)
     @vel = new Vector(0, 0)
 
-    @G = 10000000
 
   force: (pos, vel) =>
     difference = Vector.subtract(MOUSE.pos, pos)
     dist_sq = Math.max(difference.mag_sq(), 25)
 
-    g_force = @G * MOUSE.mass * @mass / dist_sq
-    k = 10000
-    spring_force = k * Math.sqrt(dist_sq) - 1 * @vel.mag()
+    velocity = @vel.mag()
+    g_force = 100000 * MOUSE.mass * @mass / dist_sq
+    spring_force = 10000 * Math.sqrt(dist_sq)
+    spring_and_g_force_vector = Vector.unit(difference).s_mult(spring_force + g_force)
 
-    return Vector.unit(difference).s_mult(Math.min(g_force, spring_force))
+    damp_force_vector = Vector.s_mult(@vel, -10)
+
+    return spring_and_g_force_vector.plus(damp_force_vector)
 
   update: (canvas, ctx, tick) =>
     f = @force(@pos, @vel)
@@ -75,7 +77,7 @@ class Particle
     delta_pos = Vector.add(@vel, Vector.s_mult(accel, tick).s_div(2))
     @pos.plus(delta_pos.s_mult(tick))
 
-    #console.log("X: #{@x}, VX: #{@vx}, AX: #{ax}")
+    #console.log("X: #{@pos.x}, VX: #{@vel.x}, AX: #{accel.x}")
 
     f = @force(@pos, @vel)
     accel2 = Vector.s_div(f, @mass)
@@ -113,15 +115,16 @@ class Animator
     @canvas = @$canvas[0]
     @$canvas.mousemove(@update_mouse_pos)
     @particles = @generate_particles(50)
-    @tick = 1
+    @tick = .001
 
   generate_particles: (num) ->
     colors = ['green', 'blue', 'green', 'purple', 'maroon', 'orange']
     funcs = _.times(num, () =>
       -> return new Particle(_.random(0, @canvas.width),
                              _.random(0, @canvas.height),
-                             0.1,
-                             colors[_.random(0, 6)])
+                             1,
+                             '#ffae23')
+                             #colors[_.random(0, 6)])
     )
     return _.map(funcs, (f) -> f())
 
@@ -134,9 +137,9 @@ class Animator
     start = Date.now()
     ctx = @canvas.getContext("2d")
     ctx.globalCompositeOperation = 'source-over'
-    ctx.fillStyle = "rgba(0, 0, 0, #{255 * 1 * @tick})"
-    #ctx.fillRect(0, 0, @canvas.width, @canvas.height)
-    ctx.clearRect(0, 0, @canvas.width, @canvas.height)
+    ctx.fillStyle = "rgba(0, 0, 0, #{255 * 2 * @tick})"
+    ctx.fillRect(0, 0, @canvas.width, @canvas.height)
+    #ctx.clearRect(0, 0, @canvas.width, @canvas.height)
 
     for particle in @particles
       particle.update(@canvas, ctx, @tick)
@@ -148,7 +151,9 @@ class Animator
     window.requestAnimationFrame(@draw)
 
 MOUSE =
-  pos: undefined
+  pos: 
+    x: 0
+    y: 0
   mass: 1000
 $ ->
   MOUSE = 
