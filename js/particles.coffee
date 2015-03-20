@@ -115,6 +115,7 @@ class Animator
     @$canvas = canvas
     @canvas = @$canvas[0]
     @$canvas.mousemove(@update_mouse_pos)
+    @$canvas.mousedown(@explode_particles)
     @particles = @generate_particles(50)
     @tick = .001
 
@@ -132,6 +133,16 @@ class Animator
     rect = @canvas.getBoundingClientRect()
     MOUSE.pos.x = evt.clientX - rect.left
     MOUSE.pos.y = evt.clientY - rect.top
+
+  # Make the particles explode away from the mouse
+  explode_particles: (evt) =>
+    for particle in @particles
+      difference = Vector.subtract(MOUSE.pos, particle.pos)
+      dist = Math.max(difference.mag(), 20)
+      
+      push_force = -1000000 
+      vel_mag = push_force / dist
+      particle.vel.plus(Vector.unit(difference).s_mult(vel_mag))
 
   draw: =>
     start = Date.now()
