@@ -58,7 +58,7 @@ class Particle
 
   force: (pos, vel) =>
     difference = Vector.subtract(MOUSE.pos, pos)
-    dist_sq = Math.max(difference.mag_sq(), 25)
+    dist_sq = Math.max(difference.mag_sq(), 1)
 
     velocity = @vel.mag()
     g_force = 10000000 * MOUSE.mass * @mass / dist_sq
@@ -138,7 +138,7 @@ class Animator
   explode_particles: (evt) =>
     for particle in @particles
       difference = Vector.subtract(MOUSE.pos, particle.pos)
-      dist = Math.max(difference.mag(), 20)
+      dist = Math.max(difference.mag(), 1)
       
       push_force = -1000000 
       vel_mag = push_force / dist
