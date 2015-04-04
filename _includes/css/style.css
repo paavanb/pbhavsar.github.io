@@ -2,11 +2,11 @@
   text-align: center;
   color: #fff;
   background-attachment: scroll;
-  background-image: url(./img/portfolio/finn-and-jake.png);
-  background-position: center center;
+  background-image: url(../img/portfolio/finn-and-jake-background.png);
+  background-position: top;
   background-repeat: none;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  background-size: cover;
-  -o-background-size: cover;
+  /*-webkit-background-size: cover;*/
+  /*-moz-background-size: cover;*/
+  /*background-size: cover;*/
+  /*-o-background-size: cover;*/
 }
