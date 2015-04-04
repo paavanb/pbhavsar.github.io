@@ -62,8 +62,8 @@ class Particle
     dist_sq = Math.max(difference.mag_sq(), 25)
 
     velocity = @vel.mag()
-    g_force = 1000 * MOUSE.mass * @mass / dist_sq
-    spring_force = 0.01 * Math.sqrt(dist_sq)
+    g_force = 2000 * MOUSE.mass * @mass / dist_sq
+    spring_force = 0.05 * Math.sqrt(dist_sq)
 
     spring_and_g_force_vector = Vector.unit(difference)
       .s_mult(Math.min(g_force, spring_force))
