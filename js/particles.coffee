@@ -97,15 +97,14 @@ class Particle
       @pos.y = Math.min(Math.max(@pos.y, 0), canvas.height)
       @vel.y = -@vel.y * 0.5
 
-    @mass = Math.min(Math.max(@vel.mag()/1, 0.1), 1)
-
   draw: (ctx) =>
     ctx.save()
     ctx.beginPath()
 
     ctx.translate(@pos.x, @pos.y)
 
-    ctx.ellipse(0, 0, 5 * @mass, 5 * @mass, 0, 0, 2*Math.PI, false)
+    velocity = Math.min(Math.max(@vel.mag(), .5), 5)
+    ctx.ellipse(0, 0, velocity, velocity, 0, 0, 2*Math.PI, false)
     ctx.fillStyle = @color
     ctx.fill()
 
@@ -119,7 +118,7 @@ class Animator
     @canvas = @$canvas[0]
     @$canvas.mousemove(@update_mouse_pos)
     @$canvas.mousedown(@explode_particles)
-    @particles = @generate_particles(1)
+    @particles = @generate_particles(50)
     @tick = window.performance.now()
 
   generate_particles: (num) ->
