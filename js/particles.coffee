@@ -62,13 +62,13 @@ class Particle
     dist_sq = Math.max(difference.mag_sq(), 25)
 
     velocity = @vel.mag()
-    g_force = 2000 * MOUSE.mass * @mass / dist_sq
-    spring_force = 0.05 * Math.sqrt(dist_sq)
+    g_force = 700 * MOUSE.mass * @mass / dist_sq
+    spring_force = 0.01 * Math.sqrt(dist_sq)
 
     spring_and_g_force_vector = Vector.unit(difference)
       .s_mult(Math.min(g_force, spring_force))
 
-    damp_force_vector = Vector.s_mult(@vel, -0.01)
+    damp_force_vector = Vector.s_mult(@vel, -0.005)
 
     return spring_and_g_force_vector.plus(damp_force_vector)
 
@@ -103,7 +103,7 @@ class Particle
 
     ctx.translate(@pos.x, @pos.y)
 
-    velocity = Math.min(Math.max(@vel.mag(), .5), 5)
+    velocity = Math.min(Math.max(@vel.mag() * 2, .5), 5)
     ctx.ellipse(0, 0, velocity, velocity, 0, 0, 2*Math.PI, false)
     ctx.fillStyle = @color
     ctx.fill()
@@ -112,7 +112,7 @@ class Particle
     ctx.restore()
 
 class Animator
-  MS_PER_TICK: 1000 / 60.0
+  MS_PER_TICK: 1000 / 120.0
   constructor: (canvas) ->
     @$canvas = canvas
     @canvas = @$canvas[0]
