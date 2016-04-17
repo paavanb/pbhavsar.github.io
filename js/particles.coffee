@@ -2,41 +2,51 @@
 ---
 
 class Vector
+  ### Class for representing and manipulating vectors. ###
   constructor: (@x, @y) ->
 
   mag: ->
+    ### Get the magnitude of this Vector. ###
     return Math.sqrt(@mag_sq())
 
   mag_sq: ->
+    ### Get the magnitude squared for this Vector. ###
     return @x * @x + @y * @y
 
   minus: (vec) ->
+    ### Subtract <vec> from this Vector and return it. ###
     @x -= vec.x
     @y -= vec.y
     return @
 
   plus: (vec) ->
+    ### Add <vec> to this Vector and return it. ###
     @x += vec.x
     @y += vec.y
     return @
 
   s_mult: (factor) ->
+    ### Scalar multiply this Vector by <factor>. ###
     @x *= factor
     @y *= factor
     return @
 
   s_div: (factor) ->
+    ### Scalar divide this Vector by <factor> and return it. ###
     @x /= factor
     @y /= factor
     return @
 
   @add: (vec1, vec2) ->
+    ### Add Vectors <vec1> and <vec2> together and return a new Vector. ###
     return new Vector(vec1.x, vec1.y).plus(vec2)
 
   @subtract: (vec1, vec2) ->
+    ### Subtract Vector <vec2> from <vec1> and return a new Vector. ###
     return new Vector(vec1.x, vec1.y).minus(vec2)
 
   @unit: (vec) ->
+    ### Return a new Vector equivalent to normalizing <vec>. ###
     mag = vec.mag()
     if mag != 0
       return new Vector(vec.x / mag, vec.y / mag)
@@ -44,19 +54,24 @@ class Vector
       return new Vector(0, 0)
 
   @s_mult: (vec, k) ->
+    ### Scalar multiple <vec> by <k> and return a new Vector. ###
     return new Vector(vec.x, vec.y).s_mult(k)
 
   @s_div: (vec, k) ->
+    ### Scalar divide <vec> by <k> and return a new Vector. ###
     return new Vector(vec.x, vec.y).s_div(k)
 
 
 class Particle
+  ### Class for representing a Particle and drawing it. ###
   constructor: (x, y, @mass, @color) ->
     @pos = new Vector(x, y)
     @vel = new Vector(0, 0)
 
 
   force: (pos, vel) =>
+    ### Get the force vector applied to this particle depending on mouse position. ###
+
     difference = Vector.subtract(MOUSE.pos, pos)
     # Set the minimum at 25 to avoid a mouse-singularity
     dist_sq = Math.max(difference.mag_sq(), 25)
@@ -80,15 +95,13 @@ class Particle
     delta_pos = Vector.add(@vel, Vector.s_mult(accel, tick).s_div(2))
     @pos.plus(delta_pos.s_mult(tick))
 
-    #console.log("X: #{@pos.x}, VX: #{@vel.x}, AX: #{accel.x}")
-
     f = @force(@pos, @vel)
     accel2 = Vector.s_div(f, @mass)
 
     # Update velocity
     delta_vel = Vector.add(accel2, accel).s_div(2)
     @vel.plus(delta_vel.s_mult(tick))
-   
+
     # Bounds check
     if @pos.x < 0 or @pos.x > canvas.width
       @pos.x = Math.min(Math.max(@pos.x, 0), canvas.width)
@@ -98,6 +111,7 @@ class Particle
       @vel.y = -@vel.y * 0.5
 
   draw: (ctx) =>
+    ### Draw this Particle using the context <ctx>. ###
     ctx.save()
     ctx.beginPath()
 
@@ -112,6 +126,7 @@ class Particle
     ctx.restore()
 
 class Animator
+  ### Class for generating and animating Particles interacting with the mouse. ###
   MS_PER_TICK: 1000 / 120.0
   constructor: (canvas) ->
     @$canvas = canvas
@@ -127,7 +142,7 @@ class Animator
       -> return new Particle(_.random(0, @canvas.width),
                              _.random(0, @canvas.height),
                              1,
-                             colors[_.random(0, colors.length)])
+                             colors[_.random(0, colors.length - 1)])
     )
     return _.map(funcs, (f) -> f())
 
@@ -136,12 +151,12 @@ class Animator
     MOUSE.pos.x = evt.clientX - rect.left
     MOUSE.pos.y = evt.clientY - rect.top
 
-  # Make the particles explode away from the mouse
   explode_particles: (evt) =>
+    ### Make the particles explode away from the mouse. ###
     for particle in @particles
       difference = Vector.subtract(MOUSE.pos, particle.pos)
       dist = Math.max(difference.mag(), 1)
-      
+
       push_force = -1000 
       vel_mag = push_force / dist
       particle.vel.plus(Vector.unit(difference).s_mult(vel_mag))
@@ -156,19 +171,20 @@ class Animator
     ctx.globalCompositeOperation = 'source-over'
     ctx.fillStyle = "rgba(0, 0, 0, 128)"
     ctx.fillRect(0, 0, @canvas.width, @canvas.height)
-    #ctx.clearRect(0, 0, @canvas.width, @canvas.height)
+
     for particle in @particles
       particle.draw(ctx)
 
     window.requestAnimationFrame(@draw)
 
 MOUSE =
-  pos: 
+  pos:
     x: 0
     y: 0
   mass: 1
+
 $ ->
-  MOUSE = 
+  MOUSE =
     pos: new Vector(0, 0)
     mass: 1
   animator = new Animator($("canvas"))
