@@ -1,0 +1,12 @@
+---
+title: 8tracks Filter
+subtitle: Browse 8tracks safely from work
+layout: default
+link: https://github.com/pbhavsar/8tracks-Filter
+date: 2016-05-08
+thumbnail: 8tracks_filter_project.png
+alt: image-alt
+description: Chrome extension that hides mix covers for SFW browsing
+
+---
+
